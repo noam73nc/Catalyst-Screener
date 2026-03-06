@@ -201,7 +201,6 @@ def get_tradingview_scan() -> pd.DataFrame:
                 'industry'
             )
             .where(
-                col('premarket_volume').notnull(),
                 col('premarket_volume') > 50000,
                 col('type').isin(['stock', 'dr', 'fund'])
             )
