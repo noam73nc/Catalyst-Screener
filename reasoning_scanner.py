@@ -15,7 +15,6 @@ try:
 except:
     GEMINI_API_KEY = "ENTER_YOUR_KEY_HERE"
 # ──────────────────────────────────────────────────────────────────────────────
-
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 st.set_page_config(page_title="Catalyst Screener", page_icon="🚀", layout="wide")
@@ -117,22 +116,6 @@ def get_tradingview_scan() -> pd.DataFrame:
         return pd.DataFrame()
 
 
-def get_news_via_rss(ticker: str) -> str:
-    try:
-        import urllib.request, re as _re
-        url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
-        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            raw = resp.read().decode('utf-8', errors='ignore')
-        titles = _re.findall(r'<title><!\[CDATA\[(.*?)\]\]></title>', raw)
-        titles = [t for t in titles if ticker not in t and 'Yahoo' not in t][:5]
-        if titles:
-            return " || ".join(f"Title: {t}" for t in titles)
-    except Exception:
-        pass
-    return ""
-
-
 def get_fundamentals_and_news(ticker: str):
     float_shares = 'N/A'
     short_interest = 'N/A'
@@ -155,8 +138,6 @@ def get_fundamentals_and_news(ticker: str):
         news_text = " || ".join(items)
     except Exception:
         pass
-    if not news_text or len(news_text) < 10:
-        news_text = get_news_via_rss(ticker)
     return float_shares, short_interest, news_text
 
 
