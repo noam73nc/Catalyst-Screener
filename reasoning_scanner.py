@@ -12,7 +12,7 @@ from tradingview_screener import Query, col
 try:
     GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 except:
-    GEMINI_API_KEY = "ENTER_YOUR_KEY_HERE"
+    GEMINI_API_KEY = "AIzaSyBfFAfs1CVxsCNcjrjaSz-M_Xdfc3YBxVw"
 # ──────────────────────────────────────────────────────────────────────────────
 
 client = genai.Client(api_key=GEMINI_API_KEY)
@@ -101,7 +101,7 @@ def get_tradingview_scan() -> pd.DataFrame:
                 col('market_cap_basic') > 300000000
             )
             .order_by('premarket_change', ascending=False)
-            .limit(30)
+            .limit(15)
             .get_scanner_data()
         )
         df = df.rename(columns={
