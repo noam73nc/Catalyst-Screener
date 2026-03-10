@@ -101,7 +101,7 @@ def get_tradingview_scan() -> pd.DataFrame:
                 col('market_cap_basic') > 300000000
             )
             .order_by('premarket_change', ascending=False)
-            .limit(15)
+            .limit(12)
             .get_scanner_data()
         )
         df = df.rename(columns={
