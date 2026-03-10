@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 from google import genai
 import json
+import os
 import re
 from time import sleep
 from tradingview_screener import Query, col
@@ -116,6 +117,22 @@ def get_tradingview_scan() -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def get_news_via_rss(ticker: str) -> str:
+    try:
+        import urllib.request, re as _re
+        url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw = resp.read().decode('utf-8', errors='ignore')
+        titles = _re.findall(r'<title><!\[CDATA\[(.*?)\]\]></title>', raw)
+        titles = [t for t in titles if ticker not in t and 'Yahoo' not in t][:5]
+        if titles:
+            return " || ".join(f"Title: {t}" for t in titles)
+    except Exception:
+        pass
+    return ""
+
+
 def get_fundamentals_and_news(ticker: str):
     float_shares = 'N/A'
     short_interest = 'N/A'
@@ -130,14 +147,16 @@ def get_fundamentals_and_news(ticker: str):
         raw_news = stock.news or []
         items = []
         for article in raw_news[:5]:
-            content = article.get('content', {})
-            title = content.get('title', '') or article.get('title', '')
-            provider = content.get('provider', {}).get('displayName', '') or article.get('publisher', '')
+            c = article.get('content', {})
+            title = c.get('title', '') or article.get('title', '')
+            provider = c.get('provider', {}).get('displayName', '') or article.get('publisher', '')
             if title:
                 items.append(f"Title: {title} | Source: {provider}")
         news_text = " || ".join(items)
     except Exception:
         pass
+    if not news_text or len(news_text) < 10:
+        news_text = get_news_via_rss(ticker)
     return float_shares, short_interest, news_text
 
 
@@ -198,7 +217,27 @@ def pct_str(val):
 st.markdown('<div class="main-title">🚀 Catalyst Screener</div>', unsafe_allow_html=True)
 st.markdown('<div class="sub-title">Pre-market gap scanner · TradingView + yFinance + Gemini AI</div>', unsafe_allow_html=True)
 
-if st.button("▶  Run New Scan", type="primary"):
+# ── טען CSV אחרון מ-GitHub Actions אם קיים ──────────────────────────────────
+RESULTS_CSV = "results/latest_scan.csv"
+
+col1, col2 = st.columns([1, 3])
+with col1:
+    run_btn = st.button("▶  Run New Scan", type="primary")
+with col2:
+    if os.path.exists(RESULTS_CSV):
+        mtime = os.path.getmtime(RESULTS_CSV)
+        import datetime
+        ts = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d %H:%M')
+        st.markdown(f"<span style='font-size:12px;color:#64748b;font-family:JetBrains Mono,monospace'>📂 Last auto-scan: {ts}</span>", unsafe_allow_html=True)
+        if st.button("📂 Load Last Auto-Scan"):
+            df_csv = pd.read_csv(RESULTS_CSV)
+            df_csv['AnalysisDetails'] = df_csv['AnalysisDetails'].apply(
+                lambda x: json.loads(x) if isinstance(x, str) and x.startswith('{') else {}
+            )
+            st.session_state['scan_df'] = df_csv
+            st.rerun()
+
+if run_btn:
     with st.spinner("Fetching pre-market leaders from TradingView..."):
         df = get_tradingview_scan()
     if df.empty:
