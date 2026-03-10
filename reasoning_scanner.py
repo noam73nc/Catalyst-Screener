@@ -1,253 +1,132 @@
 import streamlit as st
 import pandas as pd
 import yfinance as yf
-import google.generativeai as genai
+from google import genai
 import json
-import os
 import re
 from time import sleep
-from dotenv import load_dotenv
 from tradingview_screener import Query, col
 
-# ─── Page Config ───────────────────────────────────────────────────────────────
+# ─── API KEY ──────────────────────────────────────────────────────────────────
+# בענן: מגיע מ-Streamlit Secrets | בלוקאל: שנה ל-string ישיר
+try:
+    GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
+except:
+    GEMINI_API_KEY = "ENTER_YOUR_KEY_HERE"
+# ──────────────────────────────────────────────────────────────────────────────
+
+client = genai.Client(api_key=GEMINI_API_KEY)
+
 st.set_page_config(page_title="Catalyst Screener", page_icon="🚀", layout="wide")
 
-# ─── Custom CSS ────────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Inter:wght@300;400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap');
+  html, body, [class*="css"] { font-family: 'Inter', sans-serif; background-color: #1a1d23; color: #e2e8f0; }
+  .main-title { font-family: 'JetBrains Mono', monospace; font-size: 1.7rem; font-weight: 700; color: #f1f5f9; letter-spacing: -0.5px; margin-bottom: 0.2rem; }
+  .sub-title { font-size: 0.83rem; color: #94a3b8; margin-bottom: 1.5rem; font-family: 'JetBrains Mono', monospace; }
+  div.stButton > button { background: linear-gradient(135deg, #2563eb, #1d4ed8); color: #fff; border: none; border-radius: 7px; padding: 0.55rem 1.6rem; font-family: 'JetBrains Mono', monospace; font-size: 0.83rem; font-weight: 700; letter-spacing: 0.5px; box-shadow: 0 2px 8px rgba(37,99,235,0.4); transition: all 0.2s; }
+  div.stButton > button:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 
-  html, body, [class*="css"] {
-    font-family: 'Inter', sans-serif;
-    background-color: #080d14;
-    color: #c9d1d9;
-  }
+  /* ── Table ── */
+  .sc-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12.5px; }
+  .sc-table thead tr { background: #1e2130; border-bottom: 2px solid #2e3340; }
+  .sc-table th { color: #64748b; padding: 11px 12px; text-align: left; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+  .sc-table tbody tr { border-bottom: 1px solid #252830; transition: background 0.1s; }
+  .sc-table tbody tr:nth-child(odd)  { background: #1e2130; }
+  .sc-table tbody tr:nth-child(even) { background: #222631; }
+  .sc-table tbody tr:hover { background: #2a2f3e !important; }
+  .sc-table td { padding: 11px 12px; vertical-align: middle; color: #cbd5e1; }
 
-  .main-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 1.6rem;
-    font-weight: 600;
-    color: #e6edf3;
-    letter-spacing: -0.5px;
-    margin-bottom: 0.2rem;
-  }
+  /* ── Ticker ── */
+  .tk { display:inline-flex; align-items:center; gap:7px; text-decoration:none; }
+  .tk-dot { width:6px; height:6px; background:#3b82f6; border-radius:50%; box-shadow:0 0 5px rgba(59,130,246,0.7); }
+  .tk-name { color:#f1f5f9; font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13px; }
+  .tk:hover .tk-name { color:#60a5fa; }
 
-  .sub-title {
-    font-size: 0.82rem;
-    color: #5c6b7a;
-    margin-bottom: 1.5rem;
-    font-family: 'JetBrains Mono', monospace;
-  }
+  /* ── Numbers ── */
+  .gn { color:#4ade80 !important; font-weight:700; }
+  .rd { color:#f87171 !important; font-weight:700; }
+  .mu { color:#94a3b8 !important; }
 
-  div.stButton > button {
-    background: linear-gradient(135deg, #1a56db, #1e3a8a);
-    color: #e2eaff;
-    border: 1px solid #2563eb;
-    border-radius: 6px;
-    padding: 0.5rem 1.4rem;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.82rem;
-    font-weight: 600;
-    letter-spacing: 0.5px;
-    transition: all 0.2s;
-  }
-  div.stButton > button:hover {
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    border-color: #60a5fa;
-    color: #fff;
-  }
+  /* ── Category badges ── */
+  .bdg { padding:3px 9px; border-radius:14px; font-size:10px; font-weight:800; display:inline-block; white-space:nowrap; line-height:1.5; font-family:'Inter',sans-serif; }
+  .bEarnings                 { background:#064e3b; color:#6ee7b7; border:1.5px solid #10b981; }
+  .bUpgradeDowngrade         { background:#431407; color:#fdba74; border:1.5px solid #f97316; }
+  .bMacro                    { background:#1e3a5f; color:#93c5fd; border:1.5px solid #3b82f6; }
+  .bThemesNarratives         { background:#1a1040; color:#a5b4fc; border:1.5px solid #6366f1; }
+  .bNewContractsPartnerships { background:#0c2340; color:#7dd3fc; border:1.5px solid #0ea5e9; }
+  .bFDA                      { background:#2e1065; color:#c4b5fd; border:1.5px solid #8b5cf6; }
+  .bMA                       { background:#500724; color:#fda4af; border:1.5px solid #f43f5e; }
+  .bOthers                   { background:#2d3748; color:#e2e8f0; border:1.5px solid #64748b; }
 
-  .scanner-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: 'Inter', sans-serif;
-    background: #0d1117;
-    border-radius: 10px;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
-    font-size: 12.5px;
-  }
-  .scanner-table thead tr {
-    background: #161b22;
-    border-bottom: 1px solid #21262d;
-  }
-  .scanner-table th {
-    color: #484f58;
-    padding: 12px 14px;
-    text-align: left;
-    font-weight: 600;
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.8px;
-    white-space: nowrap;
-  }
-  .scanner-table td {
-    padding: 13px 14px;
-    border-bottom: 1px solid #161b22;
-    vertical-align: middle;
-    color: #8b949e;
-  }
-  .scanner-table tbody tr:hover {
-    background: #161b22;
-  }
-  .scanner-table tbody tr:last-child td {
-    border-bottom: none;
-  }
+  /* ── Grade circle ── */
+  .gc { width:27px; height:27px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:12px; }
+  .gA { background:#064e3b; color:#6ee7b7; border:2px solid #10b981; }
+  .gB { background:#1e3a5f; color:#93c5fd; border:2px solid #3b82f6; }
+  .gC { background:#431407; color:#fdba74; border:2px solid #f97316; }
+  .gD { background:#450a0a; color:#fca5a5; border:2px solid #ef4444; }
 
-  .ticker-cell {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    text-decoration: none;
-  }
-  .ticker-dot {
-    width: 6px; height: 6px;
-    background: #1a56db;
-    border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .ticker-label {
-    color: #e6edf3;
-    font-family: 'JetBrains Mono', monospace;
-    font-weight: 600;
-    font-size: 13px;
-    letter-spacing: 0.3px;
-  }
-  .ticker-cell:hover .ticker-label { color: #60a5fa; }
+  /* ── Reasoning ── */
+  .rsn { color:#94a3b8; font-size:11.5px; line-height:1.6; max-width:280px; }
 
-  .green  { color: #3fb950; font-weight: 600; }
-  .red    { color: #f85149; font-weight: 600; }
-  .muted  { color: #484f58; }
+  /* ── Analysis expand ── */
+  .ad-wrap { font-size:11.5px; }
+  details summary { cursor:pointer; color:#64748b; font-size:10.5px; font-family:'JetBrains Mono',monospace; list-style:none; display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid #3d4456; border-radius:20px; background:#252830; user-select:none; }
+  details summary::-webkit-details-marker { display:none; }
+  details[open] summary { color:#93c5fd; border-color:#3b82f6; background:#1e2a40; }
+  .ad-box { margin-top:8px; padding:10px 12px; background:#151b2e; border-left:3px solid #3b82f6; border-radius:0 6px 6px 0; }
+  .ad-sec { margin-bottom:8px; }
+  .ad-sec:last-child { margin-bottom:0; }
+  .ad-title { color:#e2e8f0; font-weight:700; font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+  .ad-body  { color:#94a3b8; font-size:11px; line-height:1.65; }
 
-  .badge {
-    padding: 3px 10px;
-    border-radius: 20px;
-    font-size: 10.5px;
-    font-weight: 700;
-    font-family: 'JetBrains Mono', monospace;
-    letter-spacing: 0.5px;
-    display: inline-block;
-    white-space: nowrap;
-  }
-  .b-EARNINGS  { background:#033a20; color:#3fb950; border:1px solid #238636; }
-  .b-MACRO     { background:#0d2044; color:#79c0ff; border:1px solid #1f6feb; }
-  .b-UPGRADE   { background:#2d1a00; color:#ffa657; border:1px solid #9e4a00; }
-  .b-FDA       { background:#1e0a40; color:#d2a8ff; border:1px solid #6e40c9; }
-  .b-MA        { background:#3d0025; color:#ff7eb3; border:1px solid #ad0060; }
-  .b-CONTRACT  { background:#012a18; color:#56d364; border:1px solid #196c2e; }
-  .b-GUIDANCE  { background:#012a18; color:#56d364; border:1px solid #196c2e; }
-  .b-OTHERS    { background:#1c2128; color:#8b949e; border:1px solid #30363d; }
-  .b-UNKNOWN   { background:#1c2128; color:#484f58; border:1px solid #21262d; }
-  .b-ERROR     { background:#3d0000; color:#ff7b72; border:1px solid #b91c1c; }
-
-  .reasoning {
-    color: #6e7681;
-    font-size: 11.5px;
-    line-height: 1.55;
-    max-width: 340px;
-  }
-
-  .stat-row {
-    display: flex;
-    gap: 2rem;
-    margin-bottom: 1.2rem;
-  }
-  .stat-box {
-    background: #0d1117;
-    border: 1px solid #21262d;
-    border-radius: 8px;
-    padding: 10px 18px;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 0.78rem;
-    color: #484f58;
-  }
-  .stat-box span {
-    color: #e6edf3;
-    font-weight: 600;
-  }
+  /* ── Stats ── */
+  .stat-row { display:flex; gap:1rem; margin-bottom:1.2rem; flex-wrap:wrap; }
+  .stat-box { background:#1e2130; border:1.5px solid #2e3340; border-radius:8px; padding:9px 18px; font-family:'JetBrains Mono',monospace; font-size:0.77rem; color:#64748b; }
+  .stat-box span { color:#f1f5f9; font-weight:700; margin-left:5px; }
 </style>
 """, unsafe_allow_html=True)
 
-# ─── API Setup ─────────────────────────────────────────────────────────────────
-load_dotenv()
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not GEMINI_API_KEY:
-    st.error("❌ Missing GEMINI_API_KEY in .env file.")
-    st.stop()
-
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel(
-    'gemini-2.5-flash',
-    generation_config={"response_mime_type": "application/json"}
-)
-
-# ─── Data Functions ────────────────────────────────────────────────────────────
 
 def get_tradingview_scan() -> pd.DataFrame:
-    """
-    Fetch pre-market movers using the tradingview-screener library.
-    This is more stable and maintainable than raw requests.
-    """
     try:
         count, df = (
             Query()
-            .select(
-                'name',
-                'premarket_change',
-                'premarket_volume',
-                'relative_volume_10d_calc',
-                'change',
-                'industry'
-            )
+            .select('name', 'premarket_change', 'premarket_volume', 'relative_volume_10d_calc', 'change', 'industry', 'market_cap_basic')
             .where(
-                col('premarket_volume') > 50000,
-                col('type').isin(['stock', 'dr', 'fund'])
+                col('premarket_volume') > 100000,
+                col('type').isin(['stock']),
+                col('exchange').isin(['NASDAQ', 'NYSE']),
+                col('market_cap_basic') > 300000000
             )
             .order_by('premarket_change', ascending=False)
-            .limit(15)
+            .limit(30)
             .get_scanner_data()
         )
-
         df = df.rename(columns={
-            'name':                    'Ticker',
-            'premarket_change':        'Premkt %',
-            'premarket_volume':        'Premkt Vol',
-            'relative_volume_10d_calc':'Ext RVol',
-            'change':                  'Daily %',
-            'industry':                'Industry',
+            'name': 'Ticker', 'premarket_change': 'Premkt %',
+            'premarket_volume': 'Premkt Vol', 'relative_volume_10d_calc': 'Ext RVol',
+            'change': 'Daily %', 'industry': 'Industry', 'market_cap_basic': 'Mkt Cap',
         })
-
-        # Strip exchange prefix (e.g. "NASDAQ:AAPL" → "AAPL")
         df['Ticker'] = df['Ticker'].str.split(':').str[-1]
-
-        return df[['Ticker', 'Premkt %', 'Premkt Vol', 'Ext RVol', 'Daily %', 'Industry']]
-
+        return df[['Ticker', 'Premkt %', 'Premkt Vol', 'Ext RVol', 'Daily %', 'Industry', 'Mkt Cap']]
     except Exception as e:
         st.error(f"TradingView scan failed: {e}")
         return pd.DataFrame()
 
 
 def get_fundamentals_and_news(ticker: str):
-    """
-    Fetch float, short interest, and recent news headlines via yfinance.
-    yfinance.news is more reliable than Google News RSS and avoids rate-limit blocks.
-    """
     float_shares = 'N/A'
     short_interest = 'N/A'
     news_text = ""
-
     try:
         stock = yf.Ticker(ticker)
         info = stock.info
-
         float_shares = info.get('floatShares', 'N/A')
-
         si = info.get('shortPercentOfFloat', 'N/A')
         if si != 'N/A' and si is not None:
             short_interest = round(si * 100, 2)
-
-        # yfinance news: list of dicts with 'title', 'publisher', 'providerPublishTime'
         raw_news = stock.news or []
         items = []
         for article in raw_news[:5]:
@@ -256,221 +135,195 @@ def get_fundamentals_and_news(ticker: str):
             provider = content.get('provider', {}).get('displayName', '') or article.get('publisher', '')
             if title:
                 items.append(f"Title: {title} | Source: {provider}")
-
         news_text = " || ".join(items)
-
     except Exception:
         pass
-
     return float_shares, short_interest, news_text
 
 
 def analyze_catalyst_with_gemini(ticker: str, news_text: str, max_retries: int = 3):
-    """
-    Use Gemini Flash to categorize the catalyst and produce a brief reasoning.
-    Retries up to max_retries times on API errors.
-    """
     if not news_text or len(news_text) < 10:
-        return "UNKNOWN", "No significant news found."
-
+        return "Others", "D", "No significant news found.", {}
     prompt = f"""
-Analyze these recent news headlines for stock ticker {ticker}.
-Identify the most likely catalyst for its current pre-market move.
+You are a professional stock market analyst. Analyze news headlines for stock ticker {ticker}.
+Return ONLY valid JSON with these fields:
 
-Categorize into EXACTLY one of:
-[EARNINGS, MACRO, UPGRADE, FDA, M&A, CONTRACT, GUIDANCE, UNKNOWN, OTHERS]
+"Category": EXACTLY one of: ["Earnings","Upgrade/Downgrade","Macro","Themes & Narratives","New Contracts & Partnerships","FDA","M&A","Others"]
+"Grade": A (strong clear catalyst), B (solid, some uncertainty), C (weak/indirect), D (no clear catalyst)
+"Reasoning": 2-3 sentence summary of why the stock is moving.
+"AnalysisDetails": object with:
+  "Impact": financial/business impact, is it material?
+  "Explosiveness": why is it moving aggressively? institutional flow, short squeeze, sector beta?
+  "DataQuality": how reliable is the news? confirmed or speculative?
 
-Provide a concise 1-2 sentence reasoning in English.
+News: {news_text}
 
-News:
-{news_text}
-
-Respond ONLY with this JSON:
-{{"Category": "CATEGORY_NAME", "Reasoning": "Your reasoning here."}}
+JSON format:
+{{"Category":"...","Grade":"A","Reasoning":"...","AnalysisDetails":{{"Impact":"...","Explosiveness":"...","DataQuality":"..."}}}}
 """
-
     for attempt in range(max_retries):
         try:
-            response = model.generate_content(prompt)
-            raw = response.text.strip()
-            # Strip markdown code fences if present
-            raw = re.sub(r'^```json\s*|```$', '', raw, flags=re.MULTILINE).strip()
+            response = client.models.generate_content(
+                model='gemini-2.5-flash', contents=prompt,
+                config=genai.types.GenerateContentConfig(response_mime_type='application/json')
+            )
+            raw = re.sub(r'^```json\s*|```$', '', response.text.strip(), flags=re.MULTILINE).strip()
             result = json.loads(raw)
-            return result.get("Category", "UNKNOWN"), result.get("Reasoning", "Analysis failed.")
+            return (result.get("Category","Others"), result.get("Grade","C"),
+                    result.get("Reasoning",""), result.get("AnalysisDetails",{}))
         except Exception:
-            if attempt < max_retries - 1:
-                sleep(8)
-            else:
-                return "ERROR", "Gemini API unavailable after retries."
+            if attempt < max_retries - 1: sleep(8)
+            else: return "Others", "D", "Gemini API unavailable.", {}
 
-
-# ─── Table Renderer ────────────────────────────────────────────────────────────
 
 def fmt_num(n) -> str:
     try:
         n = float(n)
-        if n >= 1_000_000: return f"{n / 1_000_000:.1f}M"
-        if n >= 1_000:     return f"{n / 1_000:.0f}K"
+        if n >= 1_000_000_000: return f"{n/1_000_000_000:.1f}B"
+        if n >= 1_000_000: return f"{n/1_000_000:.1f}M"
+        if n >= 1_000:     return f"{n/1_000:.0f}K"
         return str(int(n))
-    except:
-        return str(n)
+    except: return str(n)
 
-
-def render_table(df: pd.DataFrame) -> str:
-    rows = ""
-    for _, row in df.iterrows():
-        ticker = row['Ticker']
-        tv_url = f"https://www.tradingview.com/chart/?symbol={ticker}"
-
-        # Premkt %
-        try:
-            pm = float(row['Premkt %'])
-            pm_str = f"+{pm:.2f}%" if pm > 0 else f"{pm:.2f}%"
-            pm_cls = "green" if pm > 0 else "red"
-        except:
-            pm_str, pm_cls = str(row['Premkt %']), "muted"
-
-        # Daily %
-        try:
-            dp = float(row['Daily %'])
-            dp_str = f"+{dp:.2f}%" if dp > 0 else f"{dp:.2f}%"
-            dp_cls = "green" if dp > 0 else ("red" if dp < 0 else "muted")
-        except:
-            dp_str, dp_cls = str(row['Daily %']), "muted"
-
-        # RVol
-        try:
-            rvol = f"{float(row['Ext RVol']):.2f}x"
-        except:
-            rvol = "N/A"
-
-        # Short interest
-        si = row.get('Short Interest', 'N/A')
-        si_str = f"{si:.2f}%" if isinstance(si, (int, float)) else "N/A"
-
-        # Badge class
-        cat = str(row.get('Category', 'UNKNOWN')).upper().replace('&', '').replace('/', '').replace(' ', '')
-        badge_map = {
-            'MA': 'MA', 'M&A': 'MA', 'MERGERS': 'MA',
-        }
-        badge_cls = badge_map.get(cat, cat)
-
-        industry = str(row.get('Industry', ''))[:20]
-        reasoning = str(row.get('Reasoning', ''))
-
-        rows += f"""
-        <tr>
-          <td><a href="{tv_url}" target="_blank" class="ticker-cell">
-            <span class="ticker-dot"></span>
-            <span class="ticker-label">{ticker}</span>
-          </a></td>
-          <td class="{pm_cls}">{pm_str}</td>
-          <td class="muted">{fmt_num(row['Premkt Vol'])}</td>
-          <td class="muted">{rvol}</td>
-          <td class="{dp_cls}">{dp_str}</td>
-          <td class="muted">{si_str}</td>
-          <td class="muted">{fmt_num(row['Float'])}</td>
-          <td class="muted">{industry}</td>
-          <td><span class="badge b-{badge_cls}">{cat}</span></td>
-          <td class="reasoning">{reasoning}</td>
-        </tr>"""
-
-    return f"""
-    <table class="scanner-table">
-      <thead>
-        <tr>
-          <th>Ticker</th>
-          <th>Premkt %</th>
-          <th>Premkt Vol</th>
-          <th>Ext RVol</th>
-          <th>Daily %</th>
-          <th>Short Int.</th>
-          <th>Float</th>
-          <th>Industry</th>
-          <th>Category</th>
-          <th>Reasoning</th>
-        </tr>
-      </thead>
-      <tbody>{rows}</tbody>
-    </table>"""
+def pct_str(val):
+    try:
+        v = float(val)
+        cls = "gn" if v > 0 else ("rd" if v < 0 else "mu")
+        s = f"+{v:.2f}%" if v > 0 else f"{v:.2f}%"
+        return cls, s
+    except: return "mu", str(val)
 
 
 # ─── UI ────────────────────────────────────────────────────────────────────────
-
 st.markdown('<div class="main-title">🚀 Catalyst Screener</div>', unsafe_allow_html=True)
-st.markdown(
-    '<div class="sub-title">Pre-market gap scanner · TradingView + yFinance + Gemini AI</div>',
-    unsafe_allow_html=True
-)
+st.markdown('<div class="sub-title">Pre-market gap scanner · TradingView + yFinance + Gemini AI</div>', unsafe_allow_html=True)
 
 if st.button("▶  Run New Scan", type="primary"):
-
     with st.spinner("Fetching pre-market leaders from TradingView..."):
         df = get_tradingview_scan()
-
     if df.empty:
         st.warning("⚠️ No data returned. Market may be closed or API is unavailable.")
         st.stop()
 
     total = len(df)
     st.success(f"✓ Found {total} stocks. Enriching with fundamentals & AI analysis...")
-
     progress = st.progress(0)
-    status   = st.empty()
-
-    floats, shorts, categories, reasonings = [], [], [], []
+    status = st.empty()
+    floats, shorts, categories, grades, reasonings, details_list = [], [], [], [], [], []
 
     for i, (_, row) in enumerate(df.iterrows()):
         ticker = row['Ticker']
         status.markdown(
-            f"<span style='font-family:JetBrains Mono,monospace;font-size:12px;color:#484f58'>"
-            f"Analyzing {ticker} ({i+1}/{total})...</span>",
-            unsafe_allow_html=True
-        )
-
+            f"<span style='font-family:JetBrains Mono,monospace;font-size:12px;color:#94a3b8'>Analyzing {ticker} ({i+1}/{total})...</span>",
+            unsafe_allow_html=True)
         float_sh, short_int, news_text = get_fundamentals_and_news(ticker)
         floats.append(float_sh)
         shorts.append(short_int)
-
-        sleep(3)  # gentle throttle — yfinance is less aggressive than Google RSS
-
-        category, reasoning = analyze_catalyst_with_gemini(ticker, news_text)
+        sleep(3)
+        category, grade, reasoning, details = analyze_catalyst_with_gemini(ticker, news_text)
         categories.append(category)
+        grades.append(grade)
         reasonings.append(reasoning)
-
+        details_list.append(details)
         progress.progress((i + 1) / total)
 
-    df['Float']         = floats
+    df['Float'] = floats
     df['Short Interest'] = shorts
-    df['Category']      = categories
-    df['Reasoning']     = reasonings
-
+    df['Category'] = categories
+    df['Grade'] = grades
+    df['Reasoning'] = reasonings
+    df['AnalysisDetails'] = details_list
     status.empty()
     progress.empty()
 
-    # ── Stats row ─────────────────────────────────────────────────────────────
-    earnings_n = sum(1 for c in categories if c == 'EARNINGS')
-    unknown_n  = sum(1 for c in categories if c in ('UNKNOWN', 'ERROR'))
-    avg_pm     = df['Premkt %'].apply(pd.to_numeric, errors='coerce').mean()
+    # שמור ב-session_state
+    st.session_state['scan_df'] = df
+
+# רנדר מ-session_state (נשמר גם אחרי לחיצת CSV)
+if 'scan_df' in st.session_state:
+    df = st.session_state['scan_df']
+    categories = df['Category'].tolist()
+    grades     = df['Grade'].tolist()
+
+    earnings_n = sum(1 for c in categories if c == 'Earnings')
+    a_grade_n  = sum(1 for g in grades if g == 'A')
+    avg_pm = df['Premkt %'].apply(pd.to_numeric, errors='coerce').mean()
 
     st.markdown(f"""
     <div class="stat-row">
-      <div class="stat-box">Stocks scanned <span>{total}</span></div>
+      <div class="stat-box">Stocks scanned <span>{len(df)}</span></div>
       <div class="stat-box">Earnings plays <span>{earnings_n}</span></div>
+      <div class="stat-box">Grade A catalysts <span>{a_grade_n}</span></div>
       <div class="stat-box">Avg premkt move <span>+{avg_pm:.1f}%</span></div>
-      <div class="stat-box">Unidentified <span>{unknown_n}</span></div>
-    </div>
-    """, unsafe_allow_html=True)
+    </div>""", unsafe_allow_html=True)
 
-    # ── Table ──────────────────────────────────────────────────────────────────
-    st.write(render_table(df), unsafe_allow_html=True)
+    # ── Build full HTML table ──────────────────────────────────────────────────
+    rows_html = ""
+    for i, (_, row) in enumerate(df.iterrows()):
+        ticker  = row['Ticker']
+        tv_url  = f"https://www.tradingview.com/chart/?symbol={ticker}"
+        cat     = str(row.get('Category', 'Others'))
+        grade   = str(row.get('Grade', 'C'))
+        reasoning = str(row.get('Reasoning', ''))
+        details = row.get('AnalysisDetails', {})
+        if not isinstance(details, dict):
+            try: details = json.loads(str(details))
+            except: details = {}
 
+        # badge css class
+        badge_cls = "b" + cat.replace('&','').replace('/','').replace(' ','').replace('-','').replace(',','').replace('_','')
+        grade_cls = f"g{grade}" if grade in ['A','B','C','D'] else "gC"
+
+        pm_cls, pm_s = pct_str(row['Premkt %'])
+        dp_cls, dp_s = pct_str(row['Daily %'])
+
+        si = row.get('Short Interest','N/A')
+        si_s = f"{si:.2f}%" if isinstance(si,(int,float)) else "N/A"
+
+        try: rvol_s = f"{float(row['Ext RVol']):.2f}x"
+        except: rvol_s = "N/A"
+
+        impact        = details.get('Impact','') if isinstance(details,dict) else ''
+        explosiveness = details.get('Explosiveness','') if isinstance(details,dict) else ''
+        data_quality  = details.get('DataQuality','') if isinstance(details,dict) else ''
+
+        ad_inner = ""
+        if impact:
+            ad_inner += f'<div class="ad-sec"><div class="ad-title">• Impact</div><div class="ad-body">{impact}</div></div>'
+        if explosiveness:
+            ad_inner += f'<div class="ad-sec"><div class="ad-title">• Explosiveness</div><div class="ad-body">{explosiveness}</div></div>'
+        if data_quality:
+            ad_inner += f'<div class="ad-sec"><div class="ad-title">• Data Quality</div><div class="ad-body">{data_quality}</div></div>'
+
+        ad_block = f"""<details><summary>+ Details</summary><div class="ad-box">{ad_inner}</div></details>""" if ad_inner else ""
+
+        rows_html += f"""
+        <tr>
+          <td><a href="{tv_url}" target="_blank" class="tk"><span class="tk-dot"></span><span class="tk-name">{ticker}</span></a></td>
+          <td class="{pm_cls}">{pm_s}</td>
+          <td class="mu">{fmt_num(row['Premkt Vol'])}</td>
+          <td class="mu">{rvol_s}</td>
+          <td class="{dp_cls}">{dp_s}</td>
+          <td class="mu">{si_s}</td>
+          <td class="mu">{fmt_num(row.get('Float',''))}</td>
+          <td class="mu" style="font-size:11px">{str(row.get('Industry',''))[:20]}</td>
+          <td><span class="bdg {badge_cls}">{cat}</span></td>
+          <td><span class="gc {grade_cls}">{grade}</span></td>
+          <td class="rsn">{reasoning}</td>
+          <td class="ad-wrap">{ad_block}</td>
+        </tr>"""
+
+    table_html = f"""
+    <table class="sc-table">
+      <thead><tr>
+        <th>Ticker</th><th>Premkt %</th><th>Premkt Vol</th><th>Ext RVol</th>
+        <th>Daily %</th><th>Short Int.</th><th>Float</th><th>Industry</th>
+        <th>Category</th><th>Grade</th><th>Reasoning</th><th>Analysis Details</th>
+      </tr></thead>
+      <tbody>{rows_html}</tbody>
+    </table>"""
+
+    st.markdown(table_html, unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
-
     csv = df.to_csv(index=False).encode('utf-8')
-    st.download_button(
-        label="📥 Download CSV",
-        data=csv,
-        file_name="catalyst_scan.csv",
-        mime="text/csv"
-    )
+    st.download_button(label="📥 Download CSV", data=csv, file_name="catalyst_scan.csv", mime="text/csv")
