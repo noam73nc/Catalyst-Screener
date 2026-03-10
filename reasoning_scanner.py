@@ -31,12 +31,12 @@ st.markdown("""
   /* ── Table ── */
   .sc-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12.5px; table-layout: fixed; }
   .sc-table thead tr { background: #1e2130; border-bottom: 2px solid #2e3340; }
-  .sc-table th { color: #f1f5f9 !important; padding: 10px 8px; text-align: left; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; overflow: hidden; }
+  .sc-table th { color: #f1f5f9 !important; padding: 10px 10px; text-align: left; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; overflow: hidden; }
   .sc-table tbody tr { border-bottom: 1px solid #252830; transition: background 0.1s; }
   .sc-table tbody tr:nth-child(odd)  { background: #1e2130; }
   .sc-table tbody tr:nth-child(even) { background: #222631; }
   .sc-table tbody tr:hover { background: #2a2f3e !important; }
-  .sc-table td { padding: 10px 8px; vertical-align: middle; color: #cbd5e1; overflow: hidden; }
+  .sc-table td { padding: 10px 10px; vertical-align: middle; color: #cbd5e1; overflow: hidden; }
   /* ── Fixed column widths ── */
   .sc-table th:nth-child(1),  .sc-table td:nth-child(1)  { width: 70px; }   /* Ticker */
   .sc-table th:nth-child(2),  .sc-table td:nth-child(2)  { width: 72px; }   /* Premkt % */
