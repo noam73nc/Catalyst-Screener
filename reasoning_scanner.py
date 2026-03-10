@@ -29,14 +29,27 @@ st.markdown("""
   div.stButton > button:hover { background: linear-gradient(135deg, #3b82f6, #2563eb); }
 
   /* ── Table ── */
-  .sc-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12.5px; }
+  .sc-table { width: 100%; border-collapse: collapse; font-family: 'Inter', sans-serif; font-size: 12.5px; table-layout: fixed; }
   .sc-table thead tr { background: #1e2130; border-bottom: 2px solid #2e3340; }
-  .sc-table th { color: #64748b; padding: 11px 12px; text-align: left; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; }
+  .sc-table th { color: #f1f5f9 !important; padding: 10px 8px; text-align: left; font-weight: 700; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; white-space: nowrap; overflow: hidden; }
   .sc-table tbody tr { border-bottom: 1px solid #252830; transition: background 0.1s; }
   .sc-table tbody tr:nth-child(odd)  { background: #1e2130; }
   .sc-table tbody tr:nth-child(even) { background: #222631; }
   .sc-table tbody tr:hover { background: #2a2f3e !important; }
-  .sc-table td { padding: 11px 12px; vertical-align: middle; color: #cbd5e1; }
+  .sc-table td { padding: 10px 8px; vertical-align: middle; color: #cbd5e1; overflow: hidden; }
+  /* ── Fixed column widths ── */
+  .sc-table th:nth-child(1),  .sc-table td:nth-child(1)  { width: 70px; }   /* Ticker */
+  .sc-table th:nth-child(2),  .sc-table td:nth-child(2)  { width: 72px; }   /* Premkt % */
+  .sc-table th:nth-child(3),  .sc-table td:nth-child(3)  { width: 72px; }   /* Premkt Vol */
+  .sc-table th:nth-child(4),  .sc-table td:nth-child(4)  { width: 62px; }   /* Ext RVol */
+  .sc-table th:nth-child(5),  .sc-table td:nth-child(5)  { width: 68px; }   /* Daily % */
+  .sc-table th:nth-child(6),  .sc-table td:nth-child(6)  { width: 68px; }   /* Short Int */
+  .sc-table th:nth-child(7),  .sc-table td:nth-child(7)  { width: 62px; }   /* Float */
+  .sc-table th:nth-child(8),  .sc-table td:nth-child(8)  { width: 100px; }  /* Industry */
+  .sc-table th:nth-child(9),  .sc-table td:nth-child(9)  { width: 130px; }  /* Category */
+  .sc-table th:nth-child(10), .sc-table td:nth-child(10) { width: 54px; }   /* Grade */
+  .sc-table th:nth-child(11), .sc-table td:nth-child(11) { width: auto; }   /* Reasoning - fills rest */
+  .sc-table th:nth-child(12), .sc-table td:nth-child(12) { width: 80px; }   /* Analysis */
 
   /* ── Ticker ── */
   .tk { display:inline-flex; align-items:center; gap:7px; text-decoration:none; }
@@ -68,7 +81,7 @@ st.markdown("""
   .gD { background:#450a0a; color:#fca5a5; border:2px solid #ef4444; }
 
   /* ── Reasoning ── */
-  .rsn { color:#94a3b8; font-size:11.5px; line-height:1.6; max-width:280px; }
+  .rsn { color:#cbd5e1 !important; font-size:11.5px; line-height:1.6; }
 
   /* ── Analysis expand ── */
   .ad-wrap { font-size:11.5px; }
@@ -101,7 +114,7 @@ def get_tradingview_scan() -> pd.DataFrame:
                 col('market_cap_basic') > 300000000
             )
             .order_by('premarket_change', ascending=False)
-            .limit(12)
+            .limit(30)
             .get_scanner_data()
         )
         df = df.rename(columns={
