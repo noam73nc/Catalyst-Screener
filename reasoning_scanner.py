@@ -38,16 +38,16 @@ st.markdown("""
   .sc-table tbody tr:hover { background: #2a2f3e !important; }
   .sc-table td { padding: 10px 10px; vertical-align: middle; color: #cbd5e1; overflow: hidden; }
   /* ── Fixed column widths ── */
-   .sc-table th:nth-child(1),  .sc-table td:nth-child(1)  { width: 70px; }   /* Ticker */
-  .sc-table th:nth-child(2),  .sc-table td:nth-child(2)  { width: 75px; }   /* Premkt % */
-  .sc-table th:nth-child(3),  .sc-table td:nth-child(3)  { width: 75px; }   /* Premkt Vol */
+  .sc-table th:nth-child(1),  .sc-table td:nth-child(1)  { width: 70px; }   /* Ticker */
+  .sc-table th:nth-child(2),  .sc-table td:nth-child(2)  { width: 85px; }   /* Premkt % */
+  .sc-table th:nth-child(3),  .sc-table td:nth-child(3)  { width: 72px; }   /* Premkt Vol */
   .sc-table th:nth-child(4),  .sc-table td:nth-child(4)  { width: 62px; }   /* Ext RVol */
   .sc-table th:nth-child(5),  .sc-table td:nth-child(5)  { width: 75px; }   /* Daily % */
-  .sc-table th:nth-child(6),  .sc-table td:nth-child(6)  { width: 75px; }   /* Short Int */
-  .sc-table th:nth-child(7),  .sc-table td:nth-child(7)  { width: 75px; }   /* Float */
-  .sc-table th:nth-child(8),  .sc-table td:nth-child(8)  { width: 100px; }  /* Industry */
-  .sc-table th:nth-child(9),  .sc-table td:nth-child(9)  { width: 100px; }  /* Category */
-  .sc-table th:nth-child(10), .sc-table td:nth-child(10) { width: 45px; }   /* Grade */
+  .sc-table th:nth-child(6),  .sc-table td:nth-child(6)  { width: 85px; }   /* Short Int */
+  .sc-table th:nth-child(7),  .sc-table td:nth-child(7)  { width: 62px; }   /* Float */
+  .sc-table th:nth-child(8),  .sc-table td:nth-child(8)  { width: 130px; }  /* Industry */
+  .sc-table th:nth-child(9),  .sc-table td:nth-child(9)  { width: 140px; }  /* Category */
+  .sc-table th:nth-child(10), .sc-table td:nth-child(10) { width: 64px; }   /* Grade */
   .sc-table th:nth-child(11), .sc-table td:nth-child(11) { width: auto; }   /* Reasoning - fills rest */
   .sc-table th:nth-child(12), .sc-table td:nth-child(12) { width: 85px; }   /* Analysis */
 
