@@ -13,7 +13,7 @@ from tradingview_screener import Query, col
 try:
     GEMINI_API_KEY = st.secrets["GEMINI_API_KEY"]
 except:
-    GEMINI_API_KEY = "AIzaSyBfFAfs1CVxsCNcjrjaSz-M_Xdfc3YBxVw"
+    GEMINI_API_KEY = "ENTER_YOUR_KEY_HERE"
 # ──────────────────────────────────────────────────────────────────────────────
 
 client = genai.Client(api_key=GEMINI_API_KEY)
