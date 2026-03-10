@@ -46,7 +46,7 @@ st.markdown("""
   .sc-table th:nth-child(6),  .sc-table td:nth-child(6)  { width: 85px; }   /* Short Int */
   .sc-table th:nth-child(7),  .sc-table td:nth-child(7)  { width: 62px; }   /* Float */
   .sc-table th:nth-child(8),  .sc-table td:nth-child(8)  { width: 130px; }  /* Industry */
-  .sc-table th:nth-child(9),  .sc-table td:nth-child(9)  { width: 160px; }  /* Category */
+  .sc-table th:nth-child(9),  .sc-table td:nth-child(9)  { width: 170px; }  /* Category */
   .sc-table th:nth-child(10), .sc-table td:nth-child(10) { width: 64px; }   /* Grade */
   .sc-table th:nth-child(11), .sc-table td:nth-child(11) { width: auto; }   /* Reasoning - fills rest */
   .sc-table th:nth-child(12), .sc-table td:nth-child(12) { width: 85px; }   /* Analysis */
@@ -114,7 +114,7 @@ def get_tradingview_scan() -> pd.DataFrame:
                 col('market_cap_basic') > 300000000
             )
             .order_by('premarket_change', ascending=False)
-            .limit(30)
+            .limit(15)
             .get_scanner_data()
         )
         df = df.rename(columns={
