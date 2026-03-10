@@ -277,8 +277,17 @@ if 'scan_df' in st.session_state:
       <div class="stat-box">Avg premkt move <span>+{avg_pm:.1f}%</span></div>
     </div>""", unsafe_allow_html=True)
 
-    # ── Build full HTML table ──────────────────────────────────────────────────
-    rows_html = ""
+    # ── Table header ──────────────────────────────────────────────────────────
+    st.markdown("""
+    <table class="sc-table">
+      <thead><tr>
+        <th>Ticker</th><th>Premkt %</th><th>Premkt Vol</th><th>Ext RVol</th>
+        <th>Daily %</th><th>Short Int.</th><th>Float</th><th>Industry</th>
+        <th>Category</th><th>Grade</th><th>Reasoning</th><th>Analysis Details</th>
+      </tr></thead>
+    </table>""", unsafe_allow_html=True)
+
+    # ── One row per stock ──────────────────────────────────────────────────────
     for i, (_, row) in enumerate(df.iterrows()):
         ticker  = row['Ticker']
         tv_url  = f"https://www.tradingview.com/chart/?symbol={ticker}"
@@ -290,35 +299,22 @@ if 'scan_df' in st.session_state:
             try: details = json.loads(str(details))
             except: details = {}
 
-        # badge css class
         badge_cls = "b" + cat.replace('&','').replace('/','').replace(' ','').replace('-','').replace(',','').replace('_','')
         grade_cls = f"g{grade}" if grade in ['A','B','C','D'] else "gC"
-
         pm_cls, pm_s = pct_str(row['Premkt %'])
         dp_cls, dp_s = pct_str(row['Daily %'])
-
         si = row.get('Short Interest','N/A')
         si_s = f"{si:.2f}%" if isinstance(si,(int,float)) else "N/A"
-
         try: rvol_s = f"{float(row['Ext RVol']):.2f}x"
         except: rvol_s = "N/A"
 
         impact        = details.get('Impact','') if isinstance(details,dict) else ''
         explosiveness = details.get('Explosiveness','') if isinstance(details,dict) else ''
         data_quality  = details.get('DataQuality','') if isinstance(details,dict) else ''
+        has_details   = any([impact, explosiveness, data_quality])
 
-        ad_inner = ""
-        if impact:
-            ad_inner += f'<div class="ad-sec"><div class="ad-title">• Impact</div><div class="ad-body">{impact}</div></div>'
-        if explosiveness:
-            ad_inner += f'<div class="ad-sec"><div class="ad-title">• Explosiveness</div><div class="ad-body">{explosiveness}</div></div>'
-        if data_quality:
-            ad_inner += f'<div class="ad-sec"><div class="ad-title">• Data Quality</div><div class="ad-body">{data_quality}</div></div>'
-
-        ad_block = f"""<details><summary>+ Details</summary><div class="ad-box">{ad_inner}</div></details>""" if ad_inner else ""
-
-        rows_html += f"""
-        <tr>
+        row_html = f"""
+        <table class="sc-table"><tbody><tr>
           <td><a href="{tv_url}" target="_blank" class="tk"><span class="tk-dot"></span><span class="tk-name">{ticker}</span></a></td>
           <td class="{pm_cls}">{pm_s}</td>
           <td class="mu">{fmt_num(row['Premkt Vol'])}</td>
@@ -330,20 +326,22 @@ if 'scan_df' in st.session_state:
           <td><span class="bdg {badge_cls}">{cat}</span></td>
           <td><span class="gc {grade_cls}">{grade}</span></td>
           <td class="rsn">{reasoning}</td>
-          <td class="ad-wrap">{ad_block}</td>
-        </tr>"""
+          <td class="mu" style="font-size:11px">{"▼ see below" if has_details else ""}</td>
+        </tr></tbody></table>"""
+        st.markdown(row_html, unsafe_allow_html=True)
 
-    table_html = f"""
-    <table class="sc-table">
-      <thead><tr>
-        <th>Ticker</th><th>Premkt %</th><th>Premkt Vol</th><th>Ext RVol</th>
-        <th>Daily %</th><th>Short Int.</th><th>Float</th><th>Industry</th>
-        <th>Category</th><th>Grade</th><th>Reasoning</th><th>Analysis Details</th>
-      </tr></thead>
-      <tbody>{rows_html}</tbody>
-    </table>"""
+        if has_details:
+            with st.expander("📊 Analysis Details", expanded=False):
+                if impact:
+                    st.markdown("**• Impact**")
+                    st.markdown(impact)
+                if explosiveness:
+                    st.markdown("**• Explosiveness**")
+                    st.markdown(explosiveness)
+                if data_quality:
+                    st.markdown("**• Data Quality**")
+                    st.markdown(data_quality)
 
-    st.markdown(table_html, unsafe_allow_html=True)
     st.markdown("<br>", unsafe_allow_html=True)
     csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(label="📥 Download CSV", data=csv, file_name="catalyst_scan.csv", mime="text/csv")
