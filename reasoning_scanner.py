@@ -108,19 +108,37 @@ st.markdown("""
 
 def get_tradingview_scan() -> pd.DataFrame:
     try:
-        count, df = (
+        # גאפ אפ — מעל +2%
+        _, df_up = (
             Query()
             .select('name', 'premarket_change', 'premarket_volume', 'relative_volume_10d_calc', 'change', 'industry', 'market_cap_basic')
             .where(
                 col('premarket_volume') > 100000,
                 col('type').isin(['stock']),
                 col('exchange').isin(['NASDAQ', 'NYSE']),
-                col('market_cap_basic') > 300000000
+                col('market_cap_basic') > 300000000,
+                col('premarket_change') > 2
             )
             .order_by('premarket_change', ascending=False)
-            .limit(15)
+            .limit(10)
             .get_scanner_data()
         )
+        # גאפ דאון — מתחת ל-2%
+        _, df_dn = (
+            Query()
+            .select('name', 'premarket_change', 'premarket_volume', 'relative_volume_10d_calc', 'change', 'industry', 'market_cap_basic')
+            .where(
+                col('premarket_volume') > 100000,
+                col('type').isin(['stock']),
+                col('exchange').isin(['NASDAQ', 'NYSE']),
+                col('market_cap_basic') > 300000000,
+                col('premarket_change') < -2
+            )
+            .order_by('premarket_change', ascending=True)
+            .limit(10)
+            .get_scanner_data()
+        )
+        df = pd.concat([df_up, df_dn], ignore_index=True)
         df = df.rename(columns={
             'name': 'Ticker', 'premarket_change': 'Premkt %',
             'premarket_volume': 'Premkt Vol', 'relative_volume_10d_calc': 'Ext RVol',
@@ -131,7 +149,6 @@ def get_tradingview_scan() -> pd.DataFrame:
     except Exception as e:
         st.error(f"TradingView scan failed: {e}")
         return pd.DataFrame()
-
 
 def get_google_news(ticker: str, company_name: str = "") -> str:
     """Google News RSS — מחזיר חדשות עדכניות ורחבות יותר מ-yFinance."""
@@ -424,15 +441,6 @@ if 'scan_df' in st.session_state:
     st.markdown("<br>", unsafe_allow_html=True)
     csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(label="📥 Download CSV", data=csv, file_name="catalyst_scan.csv", mime="text/csv")
-
-
-
-
-
-
-
-
-
 
 
 
