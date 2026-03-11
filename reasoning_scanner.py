@@ -39,17 +39,18 @@ st.markdown("""
   .sc-table td { padding: 10px 10px; vertical-align: middle; color: #cbd5e1; overflow: hidden; }
   /* ── Fixed column widths ── */
   .sc-table th:nth-child(1),  .sc-table td:nth-child(1)  { width: 70px; }   /* Ticker */
-  .sc-table th:nth-child(2),  .sc-table td:nth-child(2)  { width: 85px; }   /* Premkt % */
-  .sc-table th:nth-child(3),  .sc-table td:nth-child(3)  { width: 72px; }   /* Pre Vol */
-  .sc-table th:nth-child(4),  .sc-table td:nth-child(4)  { width: 75px; }   /* RVol */
-  .sc-table th:nth-child(5),  .sc-table td:nth-child(5)  { width: 85px; }   /* Daily % */
-  .sc-table th:nth-child(6),  .sc-table td:nth-child(6)  { width: 85px; }   /* Short Int */
+  .sc-table th:nth-child(2),  .sc-table td:nth-child(2)  { width: 72px; }   /* Premkt % */
+  .sc-table th:nth-child(3),  .sc-table td:nth-child(3)  { width: 72px; }   /* Premkt Vol */
+  .sc-table th:nth-child(4),  .sc-table td:nth-child(4)  { width: 62px; }   /* Ext RVol */
+  .sc-table th:nth-child(5),  .sc-table td:nth-child(5)  { width: 68px; }   /* Daily % */
+  .sc-table th:nth-child(6),  .sc-table td:nth-child(6)  { width: 68px; }   /* Short Int */
   .sc-table th:nth-child(7),  .sc-table td:nth-child(7)  { width: 62px; }   /* Float */
-  .sc-table th:nth-child(8),  .sc-table td:nth-child(8)  { width: 130px; }  /* Industry */
-  .sc-table th:nth-child(9),  .sc-table td:nth-child(9)  { width: 170px; }  /* Category */
-  .sc-table th:nth-child(10), .sc-table td:nth-child(10) { width: 64px; }   /* Grade */
-  .sc-table th:nth-child(11), .sc-table td:nth-child(11) { width: auto; }   /* Reasoning - fills rest */
-  .sc-table th:nth-child(12), .sc-table td:nth-child(12) { width: 85px; }   /* Analysis */
+  .sc-table th:nth-child(8),  .sc-table td:nth-child(8)  { width: 100px; }  /* Industry */
+  .sc-table th:nth-child(9),  .sc-table td:nth-child(9)  { width: 130px; }  /* Category */
+  .sc-table th:nth-child(10), .sc-table td:nth-child(10) { width: 54px; }   /* Grade */
+  .sc-table th:nth-child(11), .sc-table td:nth-child(11) { width: 44px; }   /* Direction */
+  .sc-table th:nth-child(12), .sc-table td:nth-child(12) { width: auto; }   /* Reasoning */
+  .sc-table th:nth-child(13), .sc-table td:nth-child(13) { width: 80px; }   /* Analysis */
 
   /* ── Ticker ── */
   .tk { display:inline-flex; align-items:center; gap:7px; text-decoration:none; }
@@ -64,14 +65,15 @@ st.markdown("""
 
   /* ── Category badges ── */
   .bdg { padding:3px 9px; border-radius:14px; font-size:10px; font-weight:800; display:inline-block; white-space:nowrap; line-height:1.5; font-family:'Inter',sans-serif; }
-  .bEarnings                 { background:#064e3b; color:#6ee7b7; border:1.5px solid #10b981; }
-  .bUpgradeDowngrade         { background:#431407; color:#fdba74; border:1.5px solid #f97316; }
-  .bMacro                    { background:#1e3a5f; color:#93c5fd; border:1.5px solid #3b82f6; }
-  .bThemesNarratives         { background:#1a1040; color:#a5b4fc; border:1.5px solid #6366f1; }
-  .bNewContractsPartnerships { background:#0c2340; color:#7dd3fc; border:1.5px solid #0ea5e9; }
-  .bFDA                      { background:#2e1065; color:#c4b5fd; border:1.5px solid #8b5cf6; }
-  .bMA                       { background:#500724; color:#fda4af; border:1.5px solid #f43f5e; }
-  .bOthers                   { background:#2d3748; color:#e2e8f0; border:1.5px solid #64748b; }
+  .b-earnings    { background:#064e3b; color:#6ee7b7; border:1.5px solid #10b981; }
+  .b-upgrade     { background:#431407; color:#fdba74; border:1.5px solid #f97316; }
+  .b-macro       { background:#1e3a5f; color:#93c5fd; border:1.5px solid #3b82f6; }
+  .b-narrative   { background:#1a1040; color:#a5b4fc; border:1.5px solid #6366f1; }
+  .b-contracts   { background:#0c2340; color:#7dd3fc; border:1.5px solid #0ea5e9; }
+  .b-fda         { background:#2e1065; color:#c4b5fd; border:1.5px solid #8b5cf6; }
+  .b-ma          { background:#500724; color:#fda4af; border:1.5px solid #f43f5e; }
+  .b-offering    { background:#3b1f00; color:#fcd34d; border:1.5px solid #f59e0b; }
+  .b-other       { background:#2d3748; color:#e2e8f0; border:1.5px solid #64748b; }
 
   /* ── Grade circle ── */
   .gc { width:27px; height:27px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-family:'JetBrains Mono',monospace; font-weight:800; font-size:12px; }
@@ -79,9 +81,11 @@ st.markdown("""
   .gB { background:#1e3a5f; color:#93c5fd; border:2px solid #3b82f6; }
   .gC { background:#431407; color:#fdba74; border:2px solid #f97316; }
   .gD { background:#450a0a; color:#fca5a5; border:2px solid #ef4444; }
+  /* ── Direction dot ── */
+  .dir { font-size:18px; line-height:1; }
 
   /* ── Reasoning ── */
-  .rsn { color:#cbd5e1 !important; font-size:11.5px; line-height:1.6; }
+  .rsn { color:#cbd5e1 !important; font-size:11.5px; line-height:1.6; direction:rtl; text-align:right; }
 
   /* ── Analysis expand ── */
   .ad-wrap { font-size:11.5px; }
@@ -129,6 +133,26 @@ def get_tradingview_scan() -> pd.DataFrame:
         return pd.DataFrame()
 
 
+def get_google_news(ticker: str, company_name: str = "") -> str:
+    """Google News RSS — מחזיר חדשות עדכניות ורחבות יותר מ-yFinance."""
+    try:
+        import urllib.request, re as _re
+        query = f"{ticker} stock" if not company_name else f"{ticker} {company_name}"
+        query_enc = query.replace(' ', '+')
+        url = f"https://news.google.com/rss/search?q={query_enc}&hl=en-US&gl=US&ceid=US:en"
+        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            raw = resp.read().decode('utf-8', errors='ignore')
+        titles = _re.findall(r'<title>(.*?)</title>', raw)
+        # מסנן כותרת ראשית של הפיד עצמו
+        titles = [t for t in titles if 'Google News' not in t and len(t) > 10][:6]
+        if titles:
+            return " || ".join(f"Title: {t}" for t in titles)
+    except Exception:
+        pass
+    return ""
+
+
 def get_fundamentals_and_news(ticker: str):
     float_shares = 'N/A'
     short_interest = 'N/A'
@@ -140,6 +164,7 @@ def get_fundamentals_and_news(ticker: str):
         si = info.get('shortPercentOfFloat', 'N/A')
         if si != 'N/A' and si is not None:
             short_interest = round(si * 100, 2)
+        # yFinance news
         raw_news = stock.news or []
         items = []
         for article in raw_news[:5]:
@@ -148,31 +173,52 @@ def get_fundamentals_and_news(ticker: str):
             provider = c.get('provider', {}).get('displayName', '') or article.get('publisher', '')
             if title:
                 items.append(f"Title: {title} | Source: {provider}")
-        news_text = " || ".join(items)
+        yf_news = " || ".join(items)
+        company_name = info.get('shortName', '')
     except Exception:
-        pass
+        yf_news = ""
+        company_name = ""
+
+    # Google News RSS — מקור משלים
+    google_news = get_google_news(ticker, company_name)
+
+    # שילוב שני המקורות — Google News קודם כי הוא עדכני יותר
+    combined = []
+    if google_news:
+        combined.append(f"[Google News] {google_news}")
+    if yf_news:
+        combined.append(f"[Yahoo Finance] {yf_news}")
+    news_text = " ||| ".join(combined) if combined else ""
+
     return float_shares, short_interest, news_text
 
 
-def analyze_catalyst_with_gemini(ticker: str, news_text: str, max_retries: int = 3):
+def analyze_catalyst_with_gemini(ticker: str, news_text: str, premarket_pct: float = 0, max_retries: int = 3):
     if not news_text or len(news_text) < 10:
-        return "Others", "D", "No significant news found.", {}
+        return "Others", "D", "neutral", "לא נמצאו חדשות משמעותיות.", {}
     prompt = f"""
-You are a professional stock market analyst. Analyze news headlines for stock ticker {ticker}.
-Return ONLY valid JSON with these fields:
+אתה אנליסט שוק מקצועי. נתח את כותרות החדשות הבאות עבור המניה {ticker}.
+המניה זזה {premarket_pct:+.2f}% בפרה-מרקט היום.
+זהה את החדשה הספציפית שגרמה לתנועה הזו — התאם את הניתוח לכיוון התנועה בפועל.
+החזר JSON תקין בלבד עם השדות הבאים. כל הטקסטים חייבים להיות בעברית.
 
-"Category": EXACTLY one of: ["Earnings","Upgrade/Downgrade","Macro","Themes & Narratives","New Contracts & Partnerships","FDA","M&A","Others"]
-"Grade": A (strong clear catalyst), B (solid, some uncertainty), C (weak/indirect), D (no clear catalyst)
-"Reasoning": 2-3 sentence summary of why the stock is moving.
-"AnalysisDetails": object with:
-  "Impact": financial/business impact, is it material?
-  "Explosiveness": why is it moving aggressively? institutional flow, short squeeze, sector beta?
-  "DataQuality": how reliable is the news? confirmed or speculative?
+"Category": EXACTLY one of: ["Earnings","Upgrade/Downgrade","Macro","Themes & Narratives","New Contracts & Partnerships","FDA","M&A","Stock Offering/Dilution","Others"]
+"Grade": דירוג משולב של חוזק וכיוון הקטליזטור:
+A = קטליזטור חזק וחיובי — הזדמנות אפשרית לעלייה (bullish ברור)
+B = קטליזטור חזק אבל שלילי, או חיובי עם אי-וודאות משמעותית
+C = קטליזטור חלש, עקיף, או תנועה בגלל סקטור בלבד
+D = ספקולציה ללא בסיס, bearish חזק, או דילול/הנפקה מזיקה
+"Direction": כיוון הקטליזטור — "bullish" (חיובי למניה), "bearish" (שלילי למניה), "neutral" (ניטרלי/לא ברור). אם המניה יורדת משמעותית — Direction חייב להיות bearish אלא אם יש סיבה ברורה לעלייה עתידית.
+"Reasoning": סיכום של 2-3 משפטים בעברית מדוע המניה זזת בכיוון זה.
+"AnalysisDetails": אובייקט עם:
+  "Impact": מה ההשפעה העסקית/פיננסית? האם היא מהותית?
+  "Explosiveness": מדוע המניה זזת בחדות? זרימה מוסדית, לחץ שורטים, בטא סקטוריאלי?
+  "DataQuality": עד כמה החדשות אמינות? מאושר או ספקולטיבי?
 
-News: {news_text}
+חדשות: {news_text}
 
-JSON format:
-{{"Category":"...","Grade":"A","Reasoning":"...","AnalysisDetails":{{"Impact":"...","Explosiveness":"...","DataQuality":"..."}}}}
+פורמט JSON:
+{{"Category":"...","Grade":"A","Direction":"bullish","Reasoning":"...","AnalysisDetails":{{"Impact":"...","Explosiveness":"...","DataQuality":"..."}}}}
 """
     for attempt in range(max_retries):
         try:
@@ -183,10 +229,11 @@ JSON format:
             raw = re.sub(r'^```json\s*|```$', '', response.text.strip(), flags=re.MULTILINE).strip()
             result = json.loads(raw)
             return (result.get("Category","Others"), result.get("Grade","C"),
+                    result.get("Direction","neutral"),
                     result.get("Reasoning",""), result.get("AnalysisDetails",{}))
         except Exception:
             if attempt < max_retries - 1: sleep(8)
-            else: return "Others", "D", "Gemini API unavailable.", {}
+            else: return "Others", "D", "neutral", "Gemini API unavailable.", {}
 
 
 def fmt_num(n) -> str:
@@ -228,6 +275,8 @@ with col2:
             df_csv['AnalysisDetails'] = df_csv['AnalysisDetails'].apply(
                 lambda x: json.loads(x) if isinstance(x, str) and x.startswith('{') else {}
             )
+            if 'Direction' not in df_csv.columns:
+                df_csv['Direction'] = 'neutral' 
             st.session_state['scan_df'] = df_csv
             st.rerun()
 
@@ -242,7 +291,7 @@ if run_btn:
     st.success(f"✓ Found {total} stocks. Enriching with fundamentals & AI analysis...")
     progress = st.progress(0)
     status = st.empty()
-    floats, shorts, categories, grades, reasonings, details_list = [], [], [], [], [], []
+    floats, shorts, categories, grades, directions, reasonings, details_list = [], [], [], [], [], [], []
 
     for i, (_, row) in enumerate(df.iterrows()):
         ticker = row['Ticker']
@@ -253,9 +302,14 @@ if run_btn:
         floats.append(float_sh)
         shorts.append(short_int)
         sleep(3)
-        category, grade, reasoning, details = analyze_catalyst_with_gemini(ticker, news_text)
+        try:
+            pm_pct = float(row['Premkt %'])
+        except:
+            pm_pct = 0
+        category, grade, direction, reasoning, details = analyze_catalyst_with_gemini(ticker, news_text, pm_pct)
         categories.append(category)
         grades.append(grade)
+        directions.append(direction)
         reasonings.append(reasoning)
         details_list.append(details)
         progress.progress((i + 1) / total)
@@ -264,6 +318,7 @@ if run_btn:
     df['Short Interest'] = shorts
     df['Category'] = categories
     df['Grade'] = grades
+    df['Direction'] = directions
     df['Reasoning'] = reasonings
     df['AnalysisDetails'] = details_list
     status.empty()
@@ -296,7 +351,7 @@ if 'scan_df' in st.session_state:
       <thead><tr>
         <th>Ticker</th><th>Premkt %</th><th>Premkt Vol</th><th>Ext RVol</th>
         <th>Daily %</th><th>Short Int.</th><th>Float</th><th>Industry</th>
-        <th>Category</th><th>Grade</th><th>Reasoning</th><th>Analysis Details</th>
+        <th>Category</th><th>Grade</th><th>Dir.</th><th>Reasoning</th><th>Analysis Details</th>
       </tr></thead>
     </table>""", unsafe_allow_html=True)
 
@@ -305,15 +360,28 @@ if 'scan_df' in st.session_state:
         ticker  = row['Ticker']
         tv_url  = f"https://www.tradingview.com/chart/?symbol={ticker}"
         cat     = str(row.get('Category', 'Others'))
-        grade   = str(row.get('Grade', 'C'))
+        grade     = str(row.get('Grade', 'C'))
+        direction = str(row.get('Direction', 'neutral'))
         reasoning = str(row.get('Reasoning', ''))
         details = row.get('AnalysisDetails', {})
         if not isinstance(details, dict):
             try: details = json.loads(str(details))
             except: details = {}
 
-        badge_cls = "b" + cat.replace('&','').replace('/','').replace(' ','').replace('-','').replace(',','').replace('_','')
+        cat_map = {
+            "Earnings": "b-earnings",
+            "Upgrade/Downgrade": "b-upgrade",
+            "Macro": "b-macro",
+            "Themes & Narratives": "b-narrative",
+            "New Contracts & Partnerships": "b-contracts",
+            "FDA": "b-fda",
+            "M&A": "b-ma",
+            "Stock Offering/Dilution": "b-offering",
+            "Others": "b-other",
+        }
+        badge_cls = cat_map.get(cat, "b-other")
         grade_cls = f"g{grade}" if grade in ['A','B','C','D'] else "gC"
+        dir_emoji = "🟢" if direction == "bullish" else ("🔴" if direction == "bearish" else "⚪")
         pm_cls, pm_s = pct_str(row['Premkt %'])
         dp_cls, dp_s = pct_str(row['Daily %'])
         si = row.get('Short Interest','N/A')
@@ -338,23 +406,39 @@ if 'scan_df' in st.session_state:
           <td class="mu" style="font-size:11px">{str(row.get('Industry',''))[:20]}</td>
           <td><span class="bdg {badge_cls}">{cat}</span></td>
           <td><span class="gc {grade_cls}">{grade}</span></td>
+          <td style="text-align:center;font-size:18px">{dir_emoji}</td>
           <td class="rsn">{reasoning}</td>
           <td class="mu" style="font-size:11px">{"▼ see below" if has_details else ""}</td>
         </tr></tbody></table>"""
         st.markdown(row_html, unsafe_allow_html=True)
 
         if has_details:
-            with st.expander("📊 Analysis Details", expanded=False):
+            with st.expander("📊 ניתוח מעמיק", expanded=False):
                 if impact:
-                    st.markdown("**• Impact**")
-                    st.markdown(impact)
+                    st.markdown("<div style='direction:rtl;text-align:right'><strong>• השפעה</strong><br>" + impact + "</div>", unsafe_allow_html=True)
                 if explosiveness:
-                    st.markdown("**• Explosiveness**")
-                    st.markdown(explosiveness)
+                    st.markdown("<div style='direction:rtl;text-align:right'><strong>• עוצמת התנועה</strong><br>" + explosiveness + "</div>", unsafe_allow_html=True)
                 if data_quality:
-                    st.markdown("**• Data Quality**")
-                    st.markdown(data_quality)
+                    st.markdown("<div style='direction:rtl;text-align:right'><strong>• איכות המידע</strong><br>" + data_quality + "</div>", unsafe_allow_html=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
     csv = df.to_csv(index=False).encode('utf-8')
     st.download_button(label="📥 Download CSV", data=csv, file_name="catalyst_scan.csv", mime="text/csv")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
