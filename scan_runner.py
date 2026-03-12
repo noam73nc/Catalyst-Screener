@@ -1,5 +1,6 @@
 """
 GitHub Actions runner — מריץ סריקה בשיטת Batch ושומר תוצאות ל-results/latest_scan.csv
+כולל מעקב צריכת טוקנים (Usage Tracker) לניטור מגבלות ה-Free Tier.
 """
 import os
 import json
@@ -127,6 +128,15 @@ def analyze_all_stocks_batch(stocks_data: list, max_retries: int = 3) -> list:
                 model='gemini-2.5-flash', contents=prompt,
                 config=genai.types.GenerateContentConfig(response_mime_type='application/json')
             )
+            
+            # --- מעקב ורישום צריכת טוקנים ---
+            usage = response.usage_metadata
+            if usage:
+                print(f"  [API Usage Tracker] Prompt: {usage.prompt_token_count} | Output: {usage.candidates_token_count} | Total Tokens: {usage.total_token_count}")
+            else:
+                print("  [API Usage Tracker] Usage data not returned by the API.")
+            # --------------------------------
+
             raw = re.sub(r'^```json\s*|```$', '', response.text.strip(), flags=re.MULTILINE).strip()
             return json.loads(raw)
         except Exception as e:
