@@ -2,11 +2,10 @@ name: Pre-Market Catalyst Scan
 
 on:
   schedule:
-    - cron: '0 8 * * 1-5'   # 11:00 ישראל קיץ
-    - cron: '0 10 * * 1-5'  # 13:00 ישראל קיץ
-    - cron: '0 12 * * 1-5'  # 15:00 ישראל קיץ
-  workflow_dispatch:         # הרצה ידנית מגיטהאב
-
+    - cron: '0 12 * * 1-5'  # 08:00 AM NY Time / 14:00 שעון חורף ישראל
+    - cron: '0 13 * * 1-5'  # 09:00 AM NY Time / 15:00 שעון חורף ישראל
+  workflow_dispatch:
+  
 jobs:
   scan:
     runs-on: ubuntu-latest
